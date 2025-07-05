@@ -132,6 +132,16 @@ void discrete_crossover(const Entity& p1, const Entity& p2, Entity& c1, Entity& 
 }
 
 
+float calculate_HD(const Entity& e1, const Entity& e2) {
+
+    int hit_count = 0; // DEV: hit/miss count available
+    for (size_t i = 0; i < e1.code.size(); i++) {
+        if (e1.code[i] == e2.code[i]) hit_count++;
+    }
+
+    return hit_count / (float) e1.code.size();
+}
+
 
 EntityPool::EntityPool(const TaskProperties& tp, const GAConfig& ga_config) 
     : m_population_size(ga_config.entity_count), m_pool(2 * ga_config.entity_count, Entity(tp)) { 

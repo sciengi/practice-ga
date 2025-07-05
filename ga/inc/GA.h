@@ -20,6 +20,8 @@ struct Entity {
     bool is_marked;
     bool in_population; // DEV: move to EntityPool?
 
+    long origin_number;
+
     long penalty_out;
     long penalty_overlay;
 
@@ -62,6 +64,7 @@ void discrete_mutate(Entity& e, float percent_of_gens);
 
 void discrete_crossover(const Entity& p1, const Entity& p2, Entity& c1, Entity& c2, float probability_of_first = 0.5);
 
+float calculate_HD(const Entity& e1, const Entity& e2);
 
 
 class EntityPool {
