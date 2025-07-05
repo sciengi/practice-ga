@@ -1,6 +1,7 @@
 
 #include <fstream>
-#include <GA.h>
+#include <gaops.h>
+
 
 int main() {
 
@@ -17,30 +18,31 @@ int main() {
         .overlay_cost = 50,
         .row_cost = 10,
         .crossover_probability = 0.8,
-        .mutation_probability = 0.3
+        .mutation_probability = 0.1
     };
 
 
     // Creating a pool
-    EntityPool::population_t population, all;
-
     EntityPool epool(tp, ga_config);
+    
+    EntityPool::population_t population;
 
-    epool.get_population(population);
-    epool.get_all(all);
+    epool.get_population(population, false);
 
 
     // GAO spec-settings
-    float percent_of_gens = 0.5;
-    size_t selection_threshold = 50;
+    float percent_of_gens = 0.1;
+    size_t selection_threshold = 25;
     assert(selection_threshold <= ga_config.entity_count);
+
+    std::vector<size_t> parents(ga_config.entity_count);
+    std::vector<Entity*>   next(ga_config.entity_count);
 
 
     // Random tools setup
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count(); // DEV: update each start
     std::mt19937_64 generator(seed);
-    std::uniform_int_distribution<size_t>   choise_from_population(0, ga_config.entity_count - 1),
-                                            choise_from_selection(0, selection_threshold);
+
     std::bernoulli_distribution             is_crossover(ga_config.crossover_probability), 
                                             is_mutation(ga_config.mutation_probability);
 
@@ -56,74 +58,90 @@ int main() {
 
 
     // Main loop
-    long step_count = 100;
+    long step_count = 10000;
     long current_step = 1;
 
     for (size_t i = 0; i < population.size(); i++)
             population[i]->origin_number = current_step;
 
+    Entity* best; // DEV: to take after loop
+
     while (current_step <= step_count) {
 
         // Choosing parents & Crossover
+        panmixia(population, parents);
+
         for (size_t i = 0; i < ga_config.entity_count; i++) {
-
-            size_t partner_index = choise_from_population(generator);
-
-            if (partner_index != i && is_crossover(generator)) {
+            if (parents[i] != i && is_crossover(generator)) {
                
                 Entity* c1 = epool.get_free_entity();
                 Entity* c2 = epool.get_free_entity();
-
+                
                 discrete_crossover(
-                        *epool.get_entity(i), *epool.get_entity(partner_index), *c1, *c2);
+                    *population[i], *population[parents[i]], *c1, *c2);
 
-                c1->origin_number = current_step;
-                c2->origin_number = current_step;
 
-                c1->is_marked = false;
-                c2->is_marked = false;
+                c1->status = Entity::USED; c2->status = Entity::USED;
+                c1->is_active = false;     c2->is_active = false;
+
+                c1->is_marked = false; c2->is_marked = false;
+
+                c1->origin_number = current_step; c2->origin_number = current_step;
             }
         }
 
-        
+        epool.get_population(population, true);
+
+
         // Mutation (DEV: give a chance for all pool)
-        for (size_t i = 0; i < epool.size(); i++) {
+        for (size_t i = 0; i < population.size(); i++) {
             if (is_mutation(generator)) {
-                auto ep = epool.get_entity(i);
+                auto ep = population[i];
                 discrete_mutate(*ep, percent_of_gens);
                 ep->origin_number = current_step;
                 ep->is_marked     = false;
+                ep->is_mutated    = true;
             }
         }
-
         
+
         // Estimate all population
-        for (size_t i = 0; i < epool.size(); i++) {
-            auto ep = epool.get_entity(i);
+        for (size_t i = 0; i < population.size(); i++) {
+            auto ep = population[i];
             if (ep->is_marked == false) mark_entity(*ep, ga_config, tp);
         }
 
 
         // Selection
-        std::sort(all.begin(), all.end(), [](const Entity* left, const Entity* right) { return left->total < right->total; });
-        for (size_t i = 0; i < population.size(); i++)   population[i]->in_population = false;
-        for (size_t i = 0; i < selection_threshold; i++) all[i]       ->in_population = true;
+        truncate_and_choose(selection_threshold, population, next);
 
-        for (size_t i = 0; i < ga_config.entity_count - selection_threshold; i++) {
-            
-            size_t selected = choise_from_selection(generator);
-
-            auto ep = epool.get_free_entity();
-            *ep = *all[selected];
-            ep->in_population = true;
+        for (size_t i = 0; i < population.size(); i++) {
+            if (population[i]->status == Entity::USED) population[i]->status = Entity::FREE;
         }
 
-        epool.get_population(population);
+        for (size_t i = 0; i < ga_config.entity_count; i++) {
+
+            next[i]->is_active = true;
+            next[i]->is_mutated = false;
+
+            if (next[i]->status == Entity::RESERVED) {
+                next[i]->status = Entity::USED;
+
+            } else {
+                Entity* dublicate = epool.get_free_entity();
+                *dublicate = *next[i];
+            } 
+        }
+
+        epool.get_population(population, false);
 
 
         // Metrics
-        long best_total = all.front()->total;
-        long best_penalty = best_total - all.front()->fitness;
+        best = *std::min_element(population.begin(), population.end(), 
+                [](const Entity* left, const Entity* right){ return left->total < right->total; });
+
+        long best_total = best->total;
+        long best_penalty = best_total - best->fitness;
 
         double mean_total = 0;
         double mean_penalty = 0;
@@ -138,7 +156,7 @@ int main() {
 
 
         for (size_t i = 0; i < HD_distribution.size(); i++)
-            HD_distribution[i] = calculate_HD(*all.front(), *population[i]);
+            HD_distribution[i] = calculate_HD(*best, *population[i]);
 
         for (size_t i = 0; i < entities_origin.size(); i++)
             entities_origin[i] = population[i]->origin_number;
@@ -166,11 +184,9 @@ int main() {
     }
 
     // Result print
-    Entity* best = all.front();
-    
     print_memory_report(*best, ga_config);
 
-    std::cout << "BEST SOLUTION:\n";
+    std::cout << "\nBEST SOLUTION:\n";
     print_entity_mark(*best);
 
     std::cout << best->decode << std::endl;
