@@ -7,9 +7,10 @@ struct GAConfig {
 
     size_t entity_count;
 
-    int out_cost;
-    int overlay_cost;
-    int row_cost;
+    float out_cost;
+    float overlay_cost;
+    float distance_cost;
+    float row_cost;
 
     float crossover_probability;
     float mutation_probability;

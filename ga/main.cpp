@@ -14,12 +14,17 @@ int main() {
 
     GAConfig ga_config = {
         .entity_count = 50,
-        .out_cost = 100,
-        .overlay_cost = 50,
+
+        .out_cost = 200,
+        .overlay_cost = 100,
+        .distance_cost = 0,  // DEV: tricky  
         .row_cost = 10,
+
         .crossover_probability = 0.8,
-        .mutation_probability = 0.1
+        .mutation_probability = 0.5
     };
+
+    ga_config.distance_cost = 100 / (float)(ga_config.entity_count * 4);
 
 
     // Creating a pool
@@ -31,7 +36,7 @@ int main() {
 
 
     // GAO spec-settings
-    float percent_of_gens = 0.1;
+    float percent_of_gens = 0.9;
     size_t selection_threshold = 25;
     assert(selection_threshold <= ga_config.entity_count);
 
@@ -59,6 +64,7 @@ int main() {
 
     // Main loop
     long step_count = 10000;
+    long threshold_for_print = step_count / 100;
     long current_step = 1;
 
     for (size_t i = 0; i < population.size(); i++)
@@ -178,7 +184,8 @@ int main() {
         result_file << std::endl;
 
 
-        std::cerr << current_step / (float) step_count * 100 << '%' << std::endl;
+        if (current_step % (threshold_for_print) == 0)  
+            std::cerr << current_step / (float) step_count * 100 << '%' << std::endl;
 
         current_step++;
     }

@@ -30,6 +30,23 @@ long count_overlay_figures(const Field& field, const TaskProperties& tp) {
 }
 
 
+long count_cluster_distance(const Field& field, const TaskProperties& tp) {
+
+    long count = 0; int value;
+    for (size_t i = 0; i < field.height(true); i++) {
+        for (size_t j = 0; j < field.width(true); j++) {
+             value = field.get(i).get(j);
+             if (value > 0) count += value * i;
+        }
+    }
+
+    return count;
+
+    // TODO:
+    // - make second method with cluster-distance
+}
+
+
 long count_used_rows(const Field& field, const TaskProperties& tp) {
 
     long count = 0;
@@ -48,23 +65,18 @@ long count_used_rows(const Field& field, const TaskProperties& tp) {
 
 void mark_entity(Entity& e, const GAConfig& ga_config, const TaskProperties& tp) {
    
-    // prepare
     e.decode = decode_solution(e.code, tp);
 
     Field field(tp);
     build_solution(e.decode, field);
 
-    #ifdef DEBUG
-    std::cout << "BUILD:" << '\n' << field << std::endl;
-    #endif
-
-
-    e.penalty_out     = ga_config.out_cost     * count_outer_cells(field, tp);
-    e.penalty_overlay = ga_config.overlay_cost * count_overlay_figures(field, tp);
+    e.penalty_out      = ga_config.out_cost      * count_outer_cells(field, tp);
+    e.penalty_overlay  = ga_config.overlay_cost  * count_overlay_figures(field, tp);
+    e.penalty_distance = ga_config.distance_cost * count_cluster_distance(field, tp);
     
-    e.fitness         = ga_config.row_cost     * count_used_rows(field, tp);
+    e.fitness          = ga_config.row_cost      * count_used_rows(field, tp);
 
-    e.total = e.fitness + e.penalty_out + e.penalty_overlay;
+    e.total = e.fitness + e.penalty_out + e.penalty_overlay + e.penalty_distance;
 
     e.is_marked = true;
 }
@@ -78,6 +90,7 @@ void print_entity_mark(const Entity& e) {
         << "\nfitness           = " << e.fitness
         << "\npenalty (out)     = " << e.penalty_out
         << "\npenalty (overlay) = " << e.penalty_overlay
+        << "\npenalty (dist)    = " << e.penalty_distance
         << "\n" << std::endl;
 }
 

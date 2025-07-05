@@ -21,6 +21,7 @@ struct Entity {
 
     long penalty_out;
     long penalty_overlay;
+    long penalty_distance;
 
     long fitness;
 
