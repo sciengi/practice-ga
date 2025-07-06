@@ -13,7 +13,11 @@ struct GAConfig {
     float row_cost;
 
     float crossover_probability;
-    float mutation_probability;
+
+    float mutation_probability;        
+    float percent_of_mutated_gens;
+
+    size_t selection_threshold; 
 };
 
 #endif

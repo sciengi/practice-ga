@@ -83,9 +83,20 @@ const int& Field::get_direct(int index) const { return m_memory[index]; }
 
 std::ostream& operator<<(std::ostream& stream, const Field& field) {
    
+    int value;
     for (ptrdiff_t i = field.height(true) - 1; i >= 0; i--) {
         for (size_t j = 0; j < field.width(true); j++) {
-            stream << field.get(i).get(j) << ' ';
+            value = field.get(i).get(j);
+            switch(value) {
+                case 0:
+                    stream << '.'; break;
+                case 1:
+                    stream << '#'; break;
+                default:
+                    stream << 'X'; break;
+            };
+
+            stream << ' ';
         }
         stream << '\n';
     }
