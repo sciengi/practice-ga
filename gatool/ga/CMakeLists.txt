@@ -12,6 +12,7 @@ include_directories("inc")
 file(GLOB SOURCES "src/*.cpp")
 
 add_library(gae STATIC ${SOURCES})
-add_executable(demo main.cpp)
+add_executable(demo main.cpp
+    inc/Entity.h inc/EntityPool.h inc/estimating.h inc/Field.h inc/Figure.h inc/GA.h inc/GAConfig.h inc/gaops.h inc/Solution.h inc/StatManager.h inc/TaskProperties.h)
 target_link_libraries(demo PUBLIC gae)
 
