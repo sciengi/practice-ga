@@ -24,7 +24,7 @@ void GA::evolve_population(size_t current_epoch) {
 
 
     for (size_t i = 0; i < m_population.size(); i++)
-           m_population[i]->origin_number = current_epoch;
+           m_population[i]->origin_number = current_epoch; // TODO(DEV): mistake, previous version works properly
 
 
     // Choosing parents & Crossover
@@ -64,7 +64,7 @@ void GA::evolve_population(size_t current_epoch) {
     }
     
 
-    // Estimate allm_population
+    // Estimate all population
     for (size_t i = 0; i < m_population.size(); i++) {
         auto ep = m_population[i];
         if (ep->is_marked == false) mark_entity(*ep, m_gc, m_tp);

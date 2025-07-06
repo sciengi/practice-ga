@@ -24,7 +24,7 @@ int main() {
         .mutation_probability = 0.1,
         .percent_of_mutated_gens = 0.1,
 
-        .selection_threshold = 25 
+        .selection_threshold = 50
     };
 
     gc.distance_cost = 100 / (float)(gc.entity_count * 4);
