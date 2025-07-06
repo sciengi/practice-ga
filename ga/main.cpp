@@ -29,7 +29,8 @@ int main() {
 
     // Creating a pool
     EntityPool epool(tp, ga_config);
-    
+   
+
     EntityPool::population_t population;
 
     epool.get_population(population, false);
@@ -48,11 +49,11 @@ int main() {
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count(); // DEV: update each start
     std::mt19937_64 generator(seed);
 
-    std::bernoulli_distribution             is_crossover(ga_config.crossover_probability), 
-                                            is_mutation(ga_config.mutation_probability);
+	std::bernoulli_distribution is_crossover(ga_config.crossover_probability), 
+                            	 is_mutation(ga_config.mutation_probability);
 
     // Data logger setup
-    std::vector<float> HD_distribution(ga_config.entity_count);
+    std::vector<float> HD_distribution(ga_config.entity_count); // STAT
     std::vector<long>  entities_origin(ga_config.entity_count);
 
     std::fstream result_file("result.csv", std::fstream::out); // TODO: cli or smth
@@ -63,7 +64,7 @@ int main() {
 
 
     // Main loop
-    long step_count = 10000;
+    long step_count = 1000;
     long threshold_for_print = step_count / 100;
     long current_step = 1;
 
@@ -161,7 +162,7 @@ int main() {
         mean_penalty /= population.size();
 
 
-        for (size_t i = 0; i < HD_distribution.size(); i++)
+        for (size_t i = 0; i < HD_distribution.size(); i++) // TODO(DEV): move to Entity?
             HD_distribution[i] = calculate_HD(*best, *population[i]);
 
         for (size_t i = 0; i < entities_origin.size(); i++)

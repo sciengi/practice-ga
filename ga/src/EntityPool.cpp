@@ -3,10 +3,10 @@
 
 
 EntityPool::EntityPool(const TaskProperties& tp, const GAConfig& ga_config) 
-    : m_population_size(ga_config.entity_count), m_pool(2 * ga_config.entity_count, Entity(tp)) { 
+    : m_pool(2 * ga_config.entity_count, Entity(tp)) { 
     // DEV: m_pool size ~ ga_config (crossover & mutation operations)
 
-    for (size_t i = 0; i < m_population_size; i++) {
+    for (size_t i = 0; i < ga_config.entity_count; i++) {
         random_fill(m_pool[i].code);
         mark_entity(m_pool[i], ga_config, tp); 
         m_pool[i].status = Entity::USED;
@@ -47,7 +47,6 @@ size_t EntityPool::get_population(population_t& population, bool with_child) {
     }
 
     return population.size(); 
-    // DEV: can check by assert wht is it (active only -> ga_config.entity_count)
 }
 
 

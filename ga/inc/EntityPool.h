@@ -8,7 +8,6 @@
 
 class EntityPool {
 private:
-    size_t m_population_size;
     std::vector<Entity> m_pool;
 
 
