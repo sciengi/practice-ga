@@ -1,6 +1,8 @@
 #include <TaskProperties.h>
 
 
+TaskProperties::TaskProperties() {}
+
 
 TaskProperties::TaskProperties(int field_width, const std::unordered_map<char, int>& types_amount) {
     

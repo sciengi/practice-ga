@@ -41,6 +41,9 @@ struct TaskProperties {
     // int bits_for_rotation; // fixed by task
     int bits_per_figure;
 
+
+    TaskProperties();
+
     TaskProperties(int field_width, const std::unordered_map<char, int>& types_amount);
 };
 
